@@ -84,7 +84,7 @@ with st.sidebar:
                             try:
                                 sistem_istemi = f"Lütfen aşağıdaki metinden sadece danışanın adını, meslek bilgisini ve başvuru nedenini çıkar, 'hasta' kelimesini kullanma:\n\n{yeni_vaka_detayi}"
                                 response = client.chat.completions.create(
-                                    model="gpt-4o",
+                                    model="gpt-5.4-nano",
                                     messages=[{"role": "user", "content": sistem_istemi}],
                                     temperature=0.3
                                 )
@@ -125,7 +125,7 @@ with st.sidebar:
                             with st.spinner("Yenileniyor..."):
                                 try:
                                     sistem_istemi = f"Aşağıdaki klinik vakanın sadece adını, meslek bilgisini ve başvuru nedenini çıkar...\n\n{yeni_kurallar}"
-                                    response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": sistem_istemi}], temperature=0.3)
+                                    response = client.chat.completions.create(model="gpt-5.4-nano", messages=[{"role": "user", "content": sistem_istemi}], temperature=0.3)
                                     yeni_ozet = response.choices[0].message.content
                                     vaka_kaydet_bulut(duzenlenecek_ad, yeni_kurallar, yeni_ozet)
                                     st.success("Bulut Güncellendi!")
@@ -188,7 +188,7 @@ else:
         with st.chat_message("assistant"):
             try:
                 response = client.chat.completions.create(
-                    model="gpt-4o",
+                    model="gpt-5.4-nano",
                     messages=st.session_state.messages,
                     temperature=0.4
                 )

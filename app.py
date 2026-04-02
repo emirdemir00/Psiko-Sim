@@ -178,13 +178,6 @@ secilen_vaka_verisi = vaka_kutuphanesi[secilen_vaka_adi]
 vaka_kurallar = secilen_vaka_verisi["kurallar"]
 vaka_ozet = secilen_vaka_verisi["ozet"]
 
-# 6. ANA EKRAN
-st.markdown("""
-<div style='background: linear-gradient(to right, #2b5876, #4e4376); padding: 20px; border-radius: 10px; text-align: center; color: white; margin-bottom: 25px;'>
-    <h1 style='color: white; margin: 0; font-size: 36px;'>🧠 Psiko-Sim Laboratuvarı</h1>
-</div>
-""", unsafe_allow_html=True)
-
 if secilen_vaka_adi == "Seçiniz...":
     st.info("👈 Seansa başlamak için sol menüden bir danışan dosyası seçin.")
 else:

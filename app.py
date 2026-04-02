@@ -52,16 +52,13 @@ vaka_kutuphanesi = vakalari_getir()
 # 3. TASARIM VE SAYFA AYARLARI
 st.set_page_config(page_title="Psiko-Sim Laboratuvarı", page_icon="🧠", layout="wide")
 
+# ANA EKRAN (BANNER VE AÇIKLAMA)
 st.markdown("""
-    <style>
-            .block-container {
-                padding-top: 1.5rem;
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-    </style>
-    """, unsafe_allow_html=True)
-
+<div style='background: linear-gradient(to right, #2b5876, #4e4376); padding: 25px; border-radius: 12px; text-align: center; color: white; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);'>
+    <h1 style='color: white; margin: 0; font-size: 38px; font-weight: bold;'>🧠 Psiko-Sim Laboratuvarı</h1>
+    <p style='color: #d1d1d1; font-size: 18px; margin-top: 10px; font-style: italic;'>Psikolog adayları için geliştirilmiş sanal danışan simülasyonu</p>
+</div>
+""", unsafe_allow_html=True)
 # ------------------------------------
 # 4. YAN MENÜ (SIDEBAR)
 with st.sidebar:
@@ -69,7 +66,7 @@ with st.sidebar:
     
     with st.expander("ℹ️ Proje Hakkında", expanded=False):
         st.markdown("""
-        Bu platform, psikoloji öğrencilerinin klinik pratik yapması için geliştirilmiştir.
+        Bu platform, psikoloji öğrencilerinin klinik pratik yapması için geliştirilmiştir. Önemli Not: Bu uygulamada yer alan tüm vaka örnekleri ve karakterler tamamen kurgusal olup, herhangi bir gerçek kişiyle benzerlik göstermesi tesadüfidir. Vaka içerikleri; psikoloji öğrencileri, uzmanlar ve ilgili alanlarda eğitim alan bireyler için eğitim ve simülasyon amacıyla hazırlanmıştır. Bu uygulama, gerçek bir psikolojik danışmanlık veya terapi hizmeti sunmamaktadır ve bu amaçla kullanılmamalıdır. Uygulama içerisinde gerçekleştirilen simülasyonlar, terapötik sürecin birebir karşılığı olmayıp, yalnızca olası senaryolar üzerinden beceri geliştirmeyi desteklemeyi hedeflemektedir. Her bireyin yaşantısı, psikolojik yapısı ve terapi sürecine verdiği tepkiler farklıdır. Bu nedenle, burada sunulan vakalar ve olası müdahale yolları genellenebilir veya kesin doğrular olarak değerlendirilmemelidir. Uygulama içeriği, kullanıcıların klinik karar verme süreçlerinin yerini almaz. Tanı koyma, müdahale planlama ve tedavi süreçleri yalnızca yetkin ve lisanslı ruh sağlığı profesyonelleri tarafından yürütülmelidir. Eğer siz veya çevrenizdeki biri psikolojik destek ihtiyacı içindeyse, lütfen bir uzman psikolog, psikiyatrist veya ilgili sağlık profesyoneline başvurunuz. Uygulamanın kullanımından doğabilecek doğrudan veya dolaylı sonuçlardan geliştirici ekip sorumlu tutulamaz.
         """)
 
     st.divider()

@@ -192,11 +192,11 @@ with st.sidebar:
     # Butonları yan yana düzgünce koyalım
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        st.sidebar.link_button("Emir LinkedIn", "https://www.linkedin.com/in/itsemirdemir/")
+        st.sidebar.link_button("Emir Demir LinkedIn", "https://www.linkedin.com/in/itsemirdemir/")
     with col2:
-        st.sidebar.link_button("Ebru LinkedIn", "https://www.linkedin.com/in/ebru-demir-81a531369/")
+        st.sidebar.link_button("Ebru Demir LinkedIn", "https://www.linkedin.com/in/ebru-demir-81a531369/")
 
-    st.sidebar.caption("📧 itsemirdemir@gmail.com")
+    st.sidebar.caption("İletişim: itsemirdemir@gmail.com")
 # 4. hafıza temizliği
 if "mevcut_vaka" not in st.session_state:
     st.session_state.mevcut_vaka = secilen_vaka_adi

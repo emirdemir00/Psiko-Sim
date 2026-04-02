@@ -170,10 +170,10 @@ with st.sidebar:
     st.sidebar.subheader("👨‍💻 Proje Ekibi")
     
     # Senin Bilgilerin
-    st.sidebar.info("**Emir Demir**\nGeliştirici\nYeni Medya ve Yönetim Bİlişim Sistemleri Öğrencisi")
+    st.sidebar.info("**Emir Demir**\nGeliştirici - nYeni Medya ve Yönetim Bİlişim Sistemleri Öğrencisi")
     
     # Ablanın Bilgileri
-    st.sidebar.success("**Ebru Demir**\nVaka Yazarı\nPsikoloji Mezunu")
+    st.sidebar.success("**Ebru Demir**\nVaka Yazarı - Psikoloji Mezunu")
     
     # İletişim & Linkler
     st.sidebar.write("🔗 **Bağlantılar:**")

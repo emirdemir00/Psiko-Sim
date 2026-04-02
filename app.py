@@ -62,6 +62,26 @@ with st.sidebar:
         - AI Tabanlı Danışanlar
         - Dinamik Vaka Yönetimi
         - Otomatik Klinik Raporlama
+        Önemli Not:
+Bu uygulamada yer alan tüm vaka örnekleri ve karakterler tamamen kurgusal olup, herhangi
+bir gerçek kişiyle benzerlik göstermesi tesadüfidir. Vaka içerikleri; psikoloji öğrencileri,
+uzmanlar ve ilgili alanlarda eğitim alan bireyler için eğitim ve simülasyon amacıyla
+hazırlanmıştır.
+Bu uygulama, gerçek bir psikolojik danışmanlık veya terapi hizmeti sunmamaktadır ve bu
+amaçla kullanılmamalıdır. Uygulama içerisinde gerçekleştirilen simülasyonlar, terapötik
+sürecin birebir karşılığı olmayıp, yalnızca olası senaryolar üzerinden beceri geliştirmeyi
+desteklemeyi hedeflemektedir.
+Her bireyin yaşantısı, psikolojik yapısı ve terapi sürecine verdiği tepkiler farklıdır. Bu
+nedenle, burada sunulan vakalar ve olası müdahale yolları genellenebilir veya kesin doğrular
+olarak değerlendirilmemelidir.
+Uygulama içeriği, kullanıcıların klinik karar verme süreçlerinin yerini almaz. Tanı koyma,
+müdahale planlama ve tedavi süreçleri yalnızca yetkin ve lisanslı ruh sağlığı profesyonelleri
+tarafından yürütülmelidir.
+Eğer siz veya çevrenizdeki biri psikolojik destek ihtiyacı içindeyse, lütfen bir uzman
+psikolog, psikiyatrist veya ilgili sağlık profesyoneline başvurunuz.
+Uygulamanın kullanımından doğabilecek doğrudan veya dolaylı sonuçlardan geliştirici ekip
+sorumlu tutulamaz.
+
         """)
 
     st.divider()

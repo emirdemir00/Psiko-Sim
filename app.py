@@ -91,7 +91,7 @@ with st.sidebar:
                     if yeni_vaka_adi and yeni_vaka_detayi:
                         with st.spinner("Vaka oluşturuluyor..."):
                             try:
-                                sistem_istemi = f"Lütfen aşağıdaki metinden sadece hastanın demografik bilgilerini ve klinik durumunu anlatan 2-3 cümlelik profesyonel bir klinik ön rapor çıkar:\n\n{yeni_vaka_detayi}"
+                                sistem_istemi = f"Lütfen aşağıdaki metinden sadece danışanın adını, meslek bilgisini ve başvuru nedenini çıkar, 'hasta' kelimesini kullanma:\n\n{yeni_vaka_detayi}"
                                 response = client.chat.completions.create(
                                     model="gpt-4o",
                                     messages=[{"role": "user", "content": sistem_istemi}],

@@ -132,8 +132,10 @@ with st.sidebar:
                                     st.rerun()
                                 except:
                                     st.error("Hata!")
-
-    st.divider()
+        
+        # --- BURASI YENİ EKLENDİ (HİÇBİR YAZI DEĞİŞMEDİ) ---
+        elif girilen_sifre != "":
+            st.error("❌ Hatalı Şifre! Lütfen uzman yetkinizi kontrol edin.")
     secilen_vaka_adi = st.selectbox("Simüle edilecek danışan:", options=list(vaka_kutuphanesi.keys()), key="sim_vaka_sec")
     
     if st.button("Sohbeti Sıfırla"):

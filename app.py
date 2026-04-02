@@ -1,70 +1,75 @@
 import streamlit as st
 from openai import OpenAI
 import time
-import json
 import os
+from supabase import create_client, Client # Yeni kütüphane eklendi
 
-# 1. api anahtarı
+# --- 1. BAĞLANTILAR (Secrets'tan çekiliyor) ---
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# --- hafıza ---
-DOSYA_ADI = "vakalar.json"
+# Supabase Bağlantısı
+url: str = st.secrets["SUPABASE_URL"]
+key: str = st.secrets["SUPABASE_KEY"]
+supabase: Client = create_client(url, key)
 
-def veritabani_olustur():
-    varsayilan_veriler = {
-        "Seçiniz...": {
-            "kurallar": "Lütfen yan menüden bir vaka seçerek simülasyonu başlatın.",
-            "ozet": "Henüz bir danışan seçilmedi."
-        }
-    }
-    with open(DOSYA_ADI, "w", encoding="utf-8") as f:
-        json.dump(varsayilan_veriler, f, ensure_ascii=False, indent=4)
+# --- 2. BULUT VERİTABANI FONKSİYONLARI (JSON YERİNE) ---
 
 def vakalari_getir():
-    if not os.path.exists(DOSYA_ADI):
-        veritabani_olustur()
-    with open(DOSYA_ADI, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        # Supabase 'vakalar' tablosundaki her şeyi çek
+        response = supabase.table("vakalar").select("*").execute()
+        # Eğer tablo tamamen boşsa varsayılanı döndür
+        if not response.data:
+            return {"Seçiniz...": {"kurallar": "Lütfen yan menüden bir vaka seçin.", "ozet": "Henüz bir danışan seçilmedi."}}
+        
+        # Veriyi sözlük formatına çevir
+        kutuphane = {row["vaka_adi"]: {"kurallar": row["kurallar"], "ozet": row["ozet"]} for row in response.data}
+        
+        # "Seçiniz..." her zaman en başta olsun
+        if "Seçiniz..." not in kutuphane:
+            kutuphane = {"Seçiniz...": {"kurallar": "Lütfen yan menüden bir vaka seçin.", "ozet": "Henüz bir danışan seçilmedi."}, **kutuphane}
+        return kutuphane
+    except Exception as e:
+        return {"Seçiniz...": {"kurallar": f"Hata: {e}", "ozet": "Veritabanı bağlantısı kurulamadı."}}
 
-def vakalari_kaydet(veriler):
-    with open(DOSYA_ADI, "w", encoding="utf-8") as f:
-        json.dump(veriler, f, ensure_ascii=False, indent=4)
+def vaka_kaydet_bulut(ad, kurallar, ozet):
+    # Upsert: Vaka varsa günceller, yoksa yeni satır açar
+    supabase.table("vakalar").upsert({
+        "vaka_adi": ad, 
+        "kurallar": kurallar, 
+        "ozet": ozet
+    }).execute()
 
+def vaka_sil_bulut(ad):
+    # Tablodan vaka adına göre siler
+    supabase.table("vakalar").delete().eq("vaka_adi", ad).execute()
+
+# Kütüphaneyi buluttan çek
 vaka_kutuphanesi = vakalari_getir()
 
 # ---------------------------------------------
 
-# 2. tasarım
+# 3. TASARIM VE SAYFA AYARLARI
 st.set_page_config(page_title="Psiko-Sim Laboratuvarı", page_icon="🧠", layout="wide")
 
-# --- üst ve yan boşlukları kapat ---
 st.markdown("""
     <style>
             .block-container {
-                padding-top: 1.5rem;   /* Üst boşluğu ayarlar */
-                padding-left: 1rem;    /* SOL boşluğu tıraşlar */
-                padding-right: 1rem;   /* SAĞ boşluğu tıraşlar */
+                padding-top: 1.5rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
             }
     </style>
     """, unsafe_allow_html=True)
 
 # ------------------------------------
-# 3. YAN MENÜ (SIDEBAR)
+# 4. YAN MENÜ (SIDEBAR)
 with st.sidebar:
     st.title("🧠 Psiko-Sim Lab")
     
     with st.expander("ℹ️ Proje Hakkında", expanded=False):
         st.markdown("""
         Bu platform, psikoloji öğrencilerinin klinik pratik yapması için geliştirilmiştir.
-        
-        **Özellikler:**
-        - AI Tabanlı Danışanlar
-        - Dinamik Vaka Yönetimi
-        - Otomatik Klinik Raporlama
-
-        **Önemli Not:**
-        Bu uygulamada yer alan tüm vaka örnekleri ve karakterler tamamen kurgusal olup, herhangi
-        bir gerçek kişiyle benzerlik göstermesi tesadüfidir...
         """)
 
     st.divider()
@@ -74,7 +79,7 @@ with st.sidebar:
         girilen_sifre = st.text_input("Uzman Şifresi:", type="password")
         
         if girilen_sifre == "nisanyagmuru":
-            st.success("Kilit açıldı. Hoş geldiniz!")
+            st.success("Kilit açıldı.")
             
             tab1, tab2, tab3 = st.tabs(["➕ Ekle", "🗑️ Sil", "✏️ Düzenle"])
             
@@ -94,15 +99,12 @@ with st.sidebar:
                                 )
                                 klinik_ozet = response.choices[0].message.content
                             except:
-                                klinik_ozet = "Özet oluşturulamadı (API bağlantısı bekleniyor)."
+                                klinik_ozet = "Özet oluşturulamadı."
 
-                            vaka_kutuphanesi[yeni_vaka_adi] = {
-                                "kurallar": yeni_vaka_detayi,
-                                "ozet": klinik_ozet
-                            }
-                            vakalari_kaydet(vaka_kutuphanesi) 
-                            st.success(f"✅ {yeni_vaka_adi} eklendi.")
-                            time.sleep(1.5)
+                            # BULUTA KAYDET
+                            vaka_kaydet_bulut(yeni_vaka_adi, yeni_vaka_detayi, klinik_ozet)
+                            st.success(f"✅ {yeni_vaka_adi} buluta kaydedildi.")
+                            time.sleep(1)
                             st.rerun()
 
             with tab2:
@@ -113,14 +115,12 @@ with st.sidebar:
                 )
                 if st.button("Seçili Vakayı Kalıcı Olarak Sil", type="primary"):
                     if silinecek_vaka:
-                        del vaka_kutuphanesi[silinecek_vaka]
-                        vakalari_kaydet(vaka_kutuphanesi) 
+                        vaka_sil_bulut(silinecek_vaka) # BULUTTAN SİL
                         st.error(f"🗑️ {silinecek_vaka} silindi.")
-                        time.sleep(1.5)
+                        time.sleep(1)
                         st.rerun()
 
             with tab3:
-                # DÜZENLEME KISMI GÜNCELLENDİ
                 duzenlenecek_ad = st.selectbox(
                     "Düzenlenecek Vaka:", 
                     options=[v for v in vaka_kutuphanesi.keys() if v != "Seçiniz..."],
@@ -128,76 +128,51 @@ with st.sidebar:
                 )
                 if duzenlenecek_ad:
                     eski_kurallar = vaka_kutuphanesi[duzenlenecek_ad]["kurallar"]
-                    
-                    # Benzersiz key ile text_area'yı kilitledik
-                    yeni_kurallar = st.text_area(
-                        "Senaryoyu Güncelle:", 
-                        value=eski_kurallar, 
-                        height=200, 
-                        key=f"area_{duzenlenecek_ad}" 
-                    )
+                    yeni_kurallar = st.text_area("Senaryoyu Güncelle:", value=eski_kurallar, height=200, key=f"area_{duzenlenecek_ad}")
                     
                     c1, c2 = st.columns(2)
                     with c1:
-                        if st.button("Sadece Metni Kaydet", key="btn_save_only"):
-                            vaka_kutuphanesi[duzenlenecek_ad]["kurallar"] = yeni_kurallar
-                            vakalari_kaydet(vaka_kutuphanesi)
+                        if st.button("Sadece Metni Kaydet"):
+                            vaka_kaydet_bulut(duzenlenecek_ad, yeni_kurallar, vaka_kutuphanesi[duzenlenecek_ad]["ozet"])
                             st.success("Güncellendi!")
-                            time.sleep(1)
                             st.rerun()
                     with c2:
-                        if st.button("Metni Kaydet ve Özeti Yenile", key="btn_save_and_refresh"):
-                            with st.spinner("Yapay zeka yeni özeti yazıyor..."):
+                        if st.button("Metni Kaydet ve Özeti Yenile"):
+                            with st.spinner("Yenileniyor..."):
                                 try:
-                                    sistem_istemi = f"aşağıdaki klinik vakanın sadece adını, meslek bilgisini ve başvuru nedenini çıkar, 'hasta' kelimesini kullanma ve alt satıra geçerek şunları ekle: Bu simülasyonda amacınız: Danışanın öyküsünü sorularınızla ortaya çıkarmak Terapötik ilişki kurmak Danışanın yaşadığı sorunu anlamlandırmak:\n\n{yeni_kurallar}"
+                                    sistem_istemi = f"Aşağıdaki klinik vakanın sadece adını, meslek bilgisini ve başvuru nedenini çıkar...\n\n{yeni_kurallar}"
                                     response = client.chat.completions.create(
                                         model="gpt-4o",
                                         messages=[{"role": "user", "content": sistem_istemi}],
                                         temperature=0.3
                                     )
                                     yeni_ozet = response.choices[0].message.content
-                                    vaka_kutuphanesi[duzenlenecek_ad]["kurallar"] = yeni_kurallar
-                                    vaka_kutuphanesi[duzenlenecek_ad]["ozet"] = yeni_ozet
-                                    vakalari_kaydet(vaka_kutuphanesi)
-                                    st.success("Vaka ve Özet güncellendi!")
-                                    time.sleep(1)
+                                    vaka_kaydet_bulut(duzenlenecek_ad, yeni_kurallar, yeni_ozet)
+                                    st.success("Bulut Güncellendi!")
                                     st.rerun()
                                 except:
-                                    st.error("API hatası!")
-                    
-        elif girilen_sifre != "":
-            st.error("Hatalı şifre!")
-            
+                                    st.error("Hata!")
+
     st.divider()
     secilen_vaka_adi = st.selectbox("Simüle edilecek danışan:", options=list(vaka_kutuphanesi.keys()), key="sim_vaka_sec")
     
-    st.divider()
     if st.button("Sohbeti Sıfırla"):
         st.session_state.messages = []
         st.rerun()
 
-   # --- GELİŞTİRİCİ & DANIŞMAN KISMI (DÜZELTİLMİŞ) ---
+    # --- EKİP & LİNK BUTONLARI ---
     st.sidebar.divider()
     st.sidebar.subheader("👨‍💻 Proje Ekibi")
-    
-    # Senin Bilgilerin
-    st.sidebar.info("**Emir Demir**\nGeliştirici - Yeni Medya ve Yönetim Bilişim Sistemleri Öğrencisi")
-    
-    # Ablanın Bilgileri
+    st.sidebar.info("**Emir Demir**\nGeliştirici - Yeni Medya Öğrencisi")
     st.sidebar.success("**Ebru Demir**\nVaka Yazarı - Psikoloji Mezunu")
     
-    # İletişim & Linkler
-    st.sidebar.write("🔗 **Bağlantılar:**")
-    
-    # Butonları yan yana düzgünce koyalım
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        st.sidebar.link_button("Emir Demir LinkedIn", "https://www.linkedin.com/in/itsemirdemir/")
+        st.link_button("Emir LinkedIn", "https://www.linkedin.com/in/itsemirdemir/")
     with col2:
-        st.sidebar.link_button("Ebru Demir LinkedIn", "https://www.linkedin.com/in/ebru-demir-81a531369/")
+        st.link_button("Ebru LinkedIn", "https://www.linkedin.com/in/ebru-demir-81a531369/")
 
-    st.sidebar.caption("İletişim: itsemirdemir@gmail.com")
-# 4. hafıza temizliği
+# 5. SOHBET MANTIĞI
 if "mevcut_vaka" not in st.session_state:
     st.session_state.mevcut_vaka = secilen_vaka_adi
 
@@ -206,10 +181,10 @@ if st.session_state.mevcut_vaka != secilen_vaka_adi:
     st.session_state.mevcut_vaka = secilen_vaka_adi
 
 secilen_vaka_verisi = vaka_kutuphanesi[secilen_vaka_adi]
-vaka_kurallar = secilen_vaka_verisi["kurallar"] if isinstance(secilen_vaka_verisi, dict) else secilen_vaka_verisi
-vaka_ozet = secilen_vaka_verisi["ozet"] if isinstance(secilen_vaka_verisi, dict) else secilen_vaka_verisi
+vaka_kurallar = secilen_vaka_verisi["kurallar"]
+vaka_ozet = secilen_vaka_verisi["ozet"]
 
-# 5. ana ekran
+# 6. ANA EKRAN
 st.markdown("""
 <div style='background: linear-gradient(to right, #2b5876, #4e4376); padding: 20px; border-radius: 10px; text-align: center; color: white; margin-bottom: 25px;'>
     <h1 style='color: white; margin: 0; font-size: 36px;'>🧠 Psiko-Sim Laboratuvarı</h1>
@@ -225,7 +200,6 @@ else:
 
     st.divider()
 
-    # 6. sohbet hafızası
     if "messages" not in st.session_state or len(st.session_state.messages) == 0:
         st.session_state.messages = [{"role": "system", "content": vaka_kurallar}]
 
@@ -234,7 +208,6 @@ else:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-    # 7. sohbet girişi
     if prompt := st.chat_input("Terapist olarak sorunuzu yazın..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):

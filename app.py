@@ -80,12 +80,27 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# --- 5. SIDEBAR (PANEL VE EKİP) ---
+# --- 5. SIDEBAR (HAKKINDA VE EKİP GERİ GELDİ) ---
 with st.sidebar:
     st.title(L["title"])
-    with st.expander(L["expander_about"]):
-        st.write("Psikoloji simülasyon platformu.")
     
+    # PROJE HAKKINDA (Dinamik Uyarı Metni)
+    with st.expander(L["expander_about"], expanded=False):
+        if dil == "TR":
+            st.markdown("""
+            Bu platform, psikoloji öğrencilerinin klinik pratik yapması için geliştirilmiştir. 
+            **Önemli Not:** Bu uygulamada yer alan tüm vaka örnekleri ve karakterler tamamen kurgusal olup, 
+            gerçek bir psikolojik danışmanlık hizmeti sunmamaktadır. Tanı ve tedavi süreçleri 
+            yalnızca lisanslı ruh sağlığı profesyonelleri tarafından yürütülmelidir.
+            """)
+        else:
+            st.markdown("""
+            This platform is developed for psychology students to practice clinical skills. 
+            **Important Note:** All cases and characters are fictional and do not provide 
+            real psychological counseling. Diagnosis and treatment processes should only 
+            be conducted by licensed mental health professionals.
+            """)
+
     st.divider()
     st.title(L["sidebar_title"])
     secilen_vaka_adi = st.selectbox(L["sidebar_title"], options=list(vaka_kutuphanesi.keys()), key="sim_vaka_sec")
@@ -94,8 +109,21 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-    st.divider()
-    st.sidebar.info("**Emir Demir**\nDeveloper")
+    # --- PROJE EKİBİ (LİNKEDIN BUTONLARI) ---
+    st.sidebar.divider()
+    ekip_baslik = "👨‍💻 Proje Ekibi" if dil == "TR" else "👨‍💻 Project Team"
+    st.sidebar.subheader(ekip_baslik)
+    
+    # Emir Demir
+    st.sidebar.info("**Emir Demir**\n" + ("Geliştirici - Yeni Medya ve YBS Öğrencisi" if dil == "TR" else "Developer - New Media and MIS Student"))
+    # Ebru Demir
+    st.sidebar.success("**Ebru Demir**\n" + ("Vaka Yazarı - Psikoloji Mezunu" if dil == "TR" else "Case Writer - Psychology Graduate "))
+    
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        st.link_button("Emir Demir - LinkedIn", "https://www.linkedin.com/in/itsemirdemir/")
+    with col2:
+        st.link_button("Ebru Demir -  LinkedIn", "https://www.linkedin.com/in/ebru-demir-81a531369/")
 
 # --- 6. SOHBET VE METRİKLER ---
 if "mevcut_vaka" not in st.session_state: st.session_state.mevcut_vaka = secilen_vaka_adi

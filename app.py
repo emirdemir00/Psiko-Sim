@@ -150,7 +150,7 @@ if st.session_state.mevcut_vaka != secilen_vaka_adi:
 vaka_verisi = vaka_kutuphanesi[secilen_vaka_adi]
 
 if secilen_vaka_adi == sec_text:
-    # --- METRİKLER GERİ GELDİ ---
+    # --- METRİKLER VE KARŞILAMA ---
     st.info(L["welcome_msg"])
     c1, c2, c3 = st.columns(3)
     with c1: st.metric(label=L["m1_label"], value=L["m1_val"], delta=L["m1_delta"])
@@ -159,7 +159,7 @@ if secilen_vaka_adi == sec_text:
         st.metric(label=L["m2_label"], value=f"{kayitli_sayi} {L['m2_unit']}", delta="Live")
     with c3: st.metric(label=L["m3_label"], value=L["m3_val"], delta=L["m3_delta"])
 else:
-    # Vaka Aktifken Görünecek Metrikler
+    # --- VAKA AKTİF ---
     st.subheader(f"🗣️ {secilen_vaka_adi}")
     col1, col2, col3 = st.columns(3)
     with col1: st.metric(label="Status" if dil=="EN" else "Durum", value="Active")
@@ -169,65 +169,62 @@ else:
     with st.expander("📄 Info / Bilgi Dosyası"):
         st.write(vaka_verisi["ozet"])
 
-    if "messages" not in st.session_state or len(st.session_state.messages) == 0:
+    # GÜVENLİK KİLİDİ: Mesaj listesi yoksa KESİNLİKLE oluştur.
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        
+    if len(st.session_state.messages) == 0:
         dil_emri = "\nLütfen TÜRKÇE konuş." if dil == "TR" else "\nPlease respond in ENGLISH."
         st.session_state.messages = [{"role": "system", "content": vaka_verisi["kurallar"] + dil_emri}]
 
+    # Geçmiş mesajları ekrana çiz
     for message in st.session_state.messages:
         if message["role"] != "system":
             with st.chat_message(message["role"]): st.markdown(message["content"])
-# --- SESLİ GİRİŞ (WHISPER) ---
-with st.container():
-    c1, c2 = st.columns([1, 9])
-    with c1:
-        # Mikrofon ikonu
-        audio = mic_recorder(
-            start_prompt="🎙️",
-            stop_prompt="🛑",
-            key="recorder"
-        )
 
-# Eğer ses kaydı yapıldıysa
-if audio:
-    with st.spinner("Sesiniz metne dönüştürülüyor..."):
-        # Sesi OpenAI Whisper'a gönderiyoruz
-        audio_bio = io.BytesIO(audio['bytes'])
-        audio_bio.name = "audio.wav"
-        
-        transcript = client.audio.transcriptions.create(
-            model="whisper-1", 
-            file=audio_bio
-        )
-        prompt = transcript.text # Ses metne dönüştü!
-else:
-    prompt = st.chat_input(L["chat_placeholder"])
+    # --- SESLİ GİRİŞ PANELİ ---
+    st.divider()
+    audio_data = mic_recorder(
+        start_prompt="🎙️ Seansı Sesli Başlat" if dil == "TR" else "🎙️ Start Voice Session",
+        stop_prompt="🛑 Durdur ve Gönder" if dil == "TR" else "🛑 Stop and Send",
+        key="recorder"
+    )
 
-# --- SOHBETİ İŞLEME (MEVCUT KODUNUN DEVAMI) ---
-if prompt:
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=st.session_state.messages,
-            temperature=0.4
-        )
-        answer = response.choices[0].message.content
-        st.markdown(answer)
-        
-        # --- YENİ: AI CEVABINI SESLİ OYNAT ---
-        audio_file = metni_sese_cevir(answer)
-        if audio_file:
-            st.audio(audio_file, format="audio/mp3", autoplay=True)
+    prompt = None
+    if audio_data and 'bytes' in audio_data:
+        with st.spinner("Sesiniz metne dönüştürülüyor..." if dil == "TR" else "Converting speech to text..."):
+            audio_bio = io.BytesIO(audio_data['bytes'])
+            audio_bio.name = "audio.wav"
             
-        st.session_state.messages.append({"role": "assistant", "content": answer})
-    if prompt := st.chat_input(L["chat_placeholder"]):
+            transcript = client.audio.transcriptions.create(
+                model="whisper-1", 
+                file=audio_bio
+            )
+            prompt = transcript.text
+    else:
+        prompt = st.chat_input(L["chat_placeholder"])
+
+    # --- SOHBETİ İŞLEME (SES VEYA YAZI) ---
+    if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"): st.markdown(prompt)
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
         with st.chat_message("assistant"):
-            response = client.chat.completions.create(model="gpt-4o", messages=st.session_state.messages, temperature=0.4)
-            ans = response.choices[0].message.content
-            st.markdown(ans)
-            st.session_state.messages.append({"role": "assistant", "content": ans})
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o", 
+                    messages=st.session_state.messages,
+                    temperature=0.4
+                )
+                answer = response.choices[0].message.content
+                st.markdown(answer)
+                
+                # AI SESLİ CEVAP
+                audio_file = metni_sese_cevir(answer)
+                if audio_file:
+                    st.audio(audio_file, format="audio/mp3", autoplay=True)
+                    
+                st.session_state.messages.append({"role": "assistant", "content": answer})
+            except Exception as e:
+                st.error(f"Hata oluştu: {e}")

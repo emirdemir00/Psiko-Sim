@@ -195,32 +195,35 @@ else:
     )
 
     prompt = None
+    sesli_girdi_mi = False  # <--- İŞTE BÜYÜ TILSIMI BURADA BAŞLIYOR
+
     if audio_data and 'bytes' in audio_data:
         with st.spinner("Sesiniz anlaşılıyor..." if dil == "TR" else "Listening..."):
             audio_bio = io.BytesIO(audio_data['bytes'])
-            audio_bio.name = "audio.webm" # .wav yerine webm tarayıcılar için daha stabildir
+            audio_bio.name = "audio.webm" 
             
             try:
                 transcript = client.audio.transcriptions.create(
                     model="whisper-1", 
                     file=audio_bio,
-                    language="tr" # WHISPER'A KESİN EMİR: DİL TÜRKÇE!
+                    language="tr" 
                 )
                 
-                # 2. DEĞİŞEN KISIM: WHISPER HALÜSİNASYON FİLTRESİ (Altyazı M.K'yı engeller)
                 gelen_metin = transcript.text.strip()
                 yasakli_kelimeler = ["altyazı", "m.k", "m.k."]
                 
                 if gelen_metin and not any(yasak in gelen_metin.lower() for yasak in yasakli_kelimeler):
                     prompt = gelen_metin
+                    sesli_girdi_mi = True  # <--- EĞER SES VARSA ANAHTARI AÇ!
                 else:
                     st.warning("Sesiniz anlaşılamadı. Lütfen butona basıp 1 saniye bekledikten sonra konuşun.")
             except Exception as e:
                 st.error(f"Whisper Hatası: {e}")
     else:
         prompt = st.chat_input(L["chat_placeholder"])
+        # Burada sesli_girdi_mi zaten False olarak kalıyor.
 
-    # --- SOHBETİ İŞLEME (SES VEYA YAZI) ---
+    # --- SOHBETİ İŞLEME ---
     if prompt and prompt.strip() != "":
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -236,10 +239,11 @@ else:
                 answer = response.choices[0].message.content
                 st.markdown(answer)
                 
-                # AI SESLİ CEVAP
-                audio_file = metni_sese_cevir(answer)
-                if audio_file:
-                    st.audio(audio_file, format="audio/mp3", autoplay=True)
+                # --- AI SESLİ CEVAP (SADECE SESLİ GİRİŞ YAPILDIYSA) ---
+                if sesli_girdi_mi:
+                    audio_file = metni_sese_cevir(answer)
+                    if audio_file:
+                        st.audio(audio_file, format="audio/mp3", autoplay=True)
                     
                 st.session_state.messages.append({"role": "assistant", "content": answer})
             except Exception as e:

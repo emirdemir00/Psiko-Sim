@@ -4,15 +4,40 @@ import time
 import os
 from supabase import create_client, Client 
 
+LANG_DICT = {
+    "tr": {
+        "title": "🧠 Psiko-Sim Laboratuvarı",
+        "subtitle": "Psikolog adayları için geliştirilmiş sanal danışan simülasyonu",
+        "sidebar_title": "🗂 Danışan Kütüphanesi",
+        "expander_about": "ℹ️ Proje Hakkında",
+        "expander_admin": "🛠️ Yetkili Paneli (Gizli)",
+        "chat_placeholder": "Terapist olarak sorunuzu yazın...",
+        "auth_label": "Uzman Şifresi:",
+        "login_btn": "Giriş Yap",
+        "reset_btn": "Sohbeti Sıfırla"
+    },
+    "en": {
+        "title": "🧠 Psycho-Sim Lab",
+        "subtitle": "Virtual patient simulation developed for psychologist candidates",
+        "sidebar_title": "🗂 Patient Library",
+        "expander_about": "ℹ️ About Project",
+        "expander_admin": "🛠️ Admin Panel (Hidden)",
+        "chat_placeholder": "Type your question as a therapist...",
+        "auth_label": "Expert Password:",
+        "login_btn": "Login",
+        "reset_btn": "Reset Chat"
+    }
+}
+
 # --- 1. BAĞLANTILAR (Secrets'tan çekiliyor) ---
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Supabase Bağlantısı
+#Supabase
 url: str = st.secrets["SUPABASE_URL"]
 key: str = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
-# --- 2. BULUT VERİTABANI FONKSİYONLARI ---
+#BULUT VERİTABANI
 
 def vakalari_getir():
     try:
@@ -38,15 +63,15 @@ def vaka_kaydet_bulut(ad, kurallar, ozet):
 def vaka_sil_bulut(ad):
     supabase.table("vakalar").delete().eq("vaka_adi", ad).execute()
 
-# Kütüphaneyi buluttan çek
+#Kütüphaneyi buluttan çek
 vaka_kutuphanesi = vakalari_getir()
 
 # ---------------------------------------------
 
-# 3. TASARIM AYARLARI
+#TASARIM AYARLARI
 st.set_page_config(page_title="Psiko-Sim Laboratuvarı", page_icon="🧠", layout="wide")
 
-# --- ANA EKRAN (HAVALI BANNER - SADECE BU KALDI) ---
+#ANA EKRAN
 st.markdown("""
 <div style='background: linear-gradient(to right, #2b5876, #4e4376); padding: 25px; border-radius: 12px; text-align: center; color: white; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);'>
     <h1 style='color: white; margin: 0; font-size: 38px; font-weight: bold;'>🧠 Psiko-Sim Laboratuvarı</h1>
@@ -54,8 +79,13 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+#dil seçimi
+with st.sidebar:
+    dil = st.radio("Language / Dil", options=["TR", "EN"], horizontal=True)
+    L = LANG_DICT["tr"] if dil == "TR" else LANG_DICT["en"]
+
 # ------------------------------------
-# 4. YAN MENÜ (SIDEBAR)
+#YAN MENÜ
 with st.sidebar:
     st.title("🧠 Psiko-Sim Lab")
     
@@ -137,7 +167,7 @@ with st.sidebar:
             else:
                 st.error("❌ Hatalı Şifre! Lütfen uzman yetkinizi kontrol edin.")
         
-        # --- BURASI YENİ EKLENDİ (HİÇBİR YAZI DEĞİŞMEDİ) ---
+        
         elif girilen_sifre != "":
             st.error("❌ Hatalı Şifre! Lütfen uzman yetkinizi kontrol edin.")
     secilen_vaka_adi = st.selectbox("Simüle edilecek danışan:", options=list(vaka_kutuphanesi.keys()), key="sim_vaka_sec")
@@ -157,7 +187,7 @@ with st.sidebar:
     with col2:
         st.link_button("Ebru LinkedIn", "https://www.linkedin.com/in/ebru-demir-81a531369/")
 
-# 5. SOHBET MANTIĞI
+#SOHBET MANTIĞI
 if "mevcut_vaka" not in st.session_state:
     st.session_state.mevcut_vaka = secilen_vaka_adi
 
@@ -169,7 +199,7 @@ secilen_vaka_verisi = vaka_kutuphanesi[secilen_vaka_adi]
 vaka_kurallar = secilen_vaka_verisi["kurallar"]
 vaka_ozet = secilen_vaka_verisi["ozet"]
 
-# --- ŞİMDİ METRİKLERİ YAPIŞTIRABİLİRSİN ---
+#metrikler
 if secilen_vaka_adi == "Seçiniz...":
     st.info("👋 Sisteme başarıyla giriş yaptınız. Seansa başlamak için sol menüden bir danışan dosyası seçin.")
     c1, c2, c3 = st.columns(3)
@@ -186,7 +216,7 @@ else:
     with col3: st.metric(label="Klinik Kayıt", value="Aktif", delta="Gizlilik Sağlandı")
 
     with st.expander("📄 Danışan Klinik Ön Bilgi Dosyası (Okumak İçin Tıklayın)"):
-        st.write(vaka_ozet) # Artık hata vermez!
+        st.write(vaka_ozet)
 
     if "messages" not in st.session_state or len(st.session_state.messages) == 0:
         st.session_state.messages = [{"role": "system", "content": vaka_kurallar}]

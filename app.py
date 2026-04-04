@@ -304,7 +304,7 @@ else:
             try:
                 # Arka planda AI cevabı üretiyor
                 response = client.chat.completions.create(
-                    model="gpt-4o", 
+                    model="gpt-5.4-nano", 
                     messages=st.session_state.messages,
                     temperature=0.4
                 )

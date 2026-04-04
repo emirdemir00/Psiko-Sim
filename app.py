@@ -103,49 +103,50 @@ lottie_dusunuyor = lottie_yukle("https://lottie.host/80d0d885-3b95-4eb8-a1e4-4ab
 # --- MODERN ARAYÜZ CSS ENJEKSİYONU ---
 st.markdown("""
 <style>
-    /* Ana arka planı çok hafif bir gri yapıp kontrast sağlayalım */
-    .stApp {
-        background-color: #F8F9FA;
-        font-family: 'Inter', sans-serif;
+    /* Ana arka plan - !important ile Streamlit'i eziyoruz */
+    .stApp, .main {
+        background-color: #F4F6F9 !important;
+        font-family: 'Inter', sans-serif !important;
     }
     
-    /* Yan menü (Sidebar) stili - Daha yumuşak bir ton */
+    /* Yan menü (Sidebar) */
     [data-testid="stSidebar"] {
-        background-color: #FFFFFF;
-        border-right: 1px solid #EAEAEA;
-        box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.05);
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #EAEAEA !important;
     }
     
-    /* Terapist (Kullanıcı) ve Danışan (AI) Sohbet Balonlarını Özelleştirme */
+    /* Sohbet Balonları */
     [data-testid="stChatMessage"] {
-        background-color: #FFFFFF;
-        border-radius: 15px;
-        padding: 15px;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.04);
-        margin-bottom: 15px;
-        border: 1px solid #F0F0F0;
+        background-color: #FFFFFF !important;
+        border-radius: 15px !important;
+        padding: 15px !important;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05) !important;
+        margin-bottom: 15px !important;
+        border: 1px solid #E8E8E8 !important;
     }
     
-    /* Metrikleri (Durum, Etkileşim) Apple/Modern UI tarzı kutulara alma */
+    /* Metrikler (Durum, Vaka Sayısı vb.) */
     [data-testid="stMetric"] {
-        background-color: #FFFFFF;
-        border-radius: 12px;
-        padding: 15px 20px;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.03);
-        border-left: 4px solid #6C63FF; /* Tasarıma modern bir mor/lila dokunuşu */
+        background-color: #FFFFFF !important;
+        border-radius: 12px !important;
+        padding: 15px 20px !important;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05) !important;
+        border-left: 5px solid #6C63FF !important;
     }
     
-    /* Input (Yazı yazma) kutusunu yuvarlatma */
+    /* Yazı yazma (Chat Input) kutusu */
     .stChatInputContainer {
         border-radius: 20px !important;
-        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.08) !important;
+        background-color: #FFFFFF !important;
+        border: none !important;
     }
 
-    /* Expander (Hakkında / Bilgi Dosyası) kısımlarını yumuşatma */
+    /* Expander (Bilgi Dosyası) */
     .streamlit-expanderHeader {
-        background-color: #FFFFFF;
-        border-radius: 10px;
-        font-weight: 600;
+        background-color: #FFFFFF !important;
+        border-radius: 10px !important;
+        border: 1px solid #EAEAEA !important;
     }
 </style>
 """, unsafe_allow_html=True)
